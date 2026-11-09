@@ -1,34 +1,42 @@
 -- ====================================================================
--- SCRIPT DE RESET COMPLETO Y CARGA DE CATÁLOGO DE ARTÍCULOS (110 PRODUCTOS)
+-- SCRIPT DE RESET COMPLETO Y CARGA DE CATÁLOGO (110 ARTÍCULOS)
 -- Sistema de Embarques — Carnes Finas el Andén (TIF 680)
 -- Servidor: https://embarques.carnesfinaselanden.com.mx/
 -- ====================================================================
--- INSTRUCCIONES:
--- 1. Entra a tu cPanel > phpMyAdmin.
--- 2. Selecciona la base de datos del sistema (ej. carnesf1_embarques).
--- 3. Ve a la pestaña "SQL".
--- 4. Copia y pega TODO este contenido en el cuadro de texto.
--- 5. Haz clic en "Continuar" / "Ejecutar".
+-- INSTRUCCIONES EN phpMyAdmin:
+-- 1. Desmarca la casilla: "Habilite la revisión de las claves foráneas"
+--    (Enable foreign key checks) que aparece abajo del cuadro SQL.
+-- 2. Pega todo este código y haz clic en "Continuar".
 -- ====================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. LIMPIEZA DE TRANSACCIONES / MOVIMIENTOS HISTÓRICOS Y DE PRUEBA
-TRUNCATE TABLE entradas;
-TRUNCATE TABLE salidas;
-TRUNCATE TABLE movimientos_inventario;
-TRUNCATE TABLE etiquetas;
-TRUNCATE TABLE canales;
-TRUNCATE TABLE lotes;
-TRUNCATE TABLE contador_cajas;
-TRUNCATE TABLE bitacora;
+-- 1. LIMPIEZA DE TABLAS HIJAS (para evitar bloqueos de llaves foráneas)
+DELETE FROM entradas;
+DELETE FROM salidas;
+DELETE FROM movimientos_inventario;
+DELETE FROM bitacora;
+DELETE FROM etiquetas;
+DELETE FROM canales;
+DELETE FROM contador_cajas;
+DELETE FROM lotes;
 
--- 2. REINICIO DE CONSECUTIVOS A CERO
-TRUNCATE TABLE contador_lotes;
+-- 2. REINICIO DE CONTADORES AUTO_INCREMENT
+ALTER TABLE entradas AUTO_INCREMENT = 1;
+ALTER TABLE salidas AUTO_INCREMENT = 1;
+ALTER TABLE movimientos_inventario AUTO_INCREMENT = 1;
+ALTER TABLE bitacora AUTO_INCREMENT = 1;
+ALTER TABLE etiquetas AUTO_INCREMENT = 1;
+ALTER TABLE canales AUTO_INCREMENT = 1;
+ALTER TABLE lotes AUTO_INCREMENT = 1;
+
+-- 3. REINICIO DE CONSECUTIVO DE LOTES
+DELETE FROM contador_lotes;
 INSERT INTO contador_lotes (id, actual) VALUES (1, 0);
 
--- 3. REEMPLAZO DEL CATÁLOGO DE PRODUCTOS (110 ARTÍCULOS)
-TRUNCATE TABLE productos;
+-- 4. REEMPLAZO DEL CATÁLOGO DE PRODUCTOS (110 ARTÍCULOS)
+DELETE FROM productos;
+ALTER TABLE productos AUTO_INCREMENT = 1;
 
 INSERT INTO productos (codigo, nombre, tipo_ganado, activo) VALUES
 ('6077', 'AGUJA NORTEÑA PIEZA BASICA', 'Engorda', 1),
