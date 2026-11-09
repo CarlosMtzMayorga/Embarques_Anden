@@ -28,9 +28,9 @@ export default function Canales() {
       <Card className="p-4">
         <Table
           columns={['Folio', 'Fecha', 'Fecha sacrificio', 'Tipo de ganado', 'Romaneaje', 'Canales', 'P. Caliente', 'P. Frío', '']}
+          rows={lotes}
           empty={!loading && lotes.length === 0 ? 'Sin lotes registrados — usa "Nuevo lote" para empezar' : null}
-        >
-          {lotes.map((l) => (
+          renderRow={(l) => (
             <tr key={l.id}>
               <td className="px-3 py-2 font-bold text-brand-600">{l.numero}</td>
               <td className="px-3 py-2 whitespace-nowrap">{formatDateMX(l.fecha)}</td>
@@ -46,8 +46,31 @@ export default function Canales() {
                 </button>
               </td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(l) => (
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-bold text-brand-600">Lote {l.numero}</p>
+                <Pill tone="blue">{l.num_canales} canales</Pill>
+              </div>
+              <p className="mt-1 text-sm text-ink-700">{formatTipoGanado(l.tipo_ganado)}</p>
+              <p className="text-sm text-ink-500">
+                {formatDateMX(l.fecha)}
+                {l.fecha_sacrificio ? ` · sacrificio ${formatDateMX(l.fecha_sacrificio)}` : ''}
+              </p>
+              {l.romaneaje && <p className="text-sm text-ink-500">Romaneaje: {l.romaneaje}</p>}
+              <p className="mt-1 text-sm text-ink-500">
+                Caliente {formatNumber(l.peso_caliente_total, 2)} kg · Frío {formatNumber(l.peso_frio_total, 2)} kg
+              </p>
+              <button
+                onClick={() => navigate(`/canales/${l.id}`)}
+                className="mt-3 w-full rounded-lg border border-cream-300 py-2 text-sm font-semibold text-brand-600 hover:bg-cream-100"
+              >
+                Ver / continuar
+              </button>
+            </div>
+          )}
+        />
       </Card>
     </div>
   );

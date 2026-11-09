@@ -112,25 +112,47 @@ export function Banner({ tone = 'yellow', title, children }) {
   );
 }
 
-export function Table({ columns, children, empty }) {
+// Tabla responsive: en escritorio (md: y superior) se ve como tabla normal;
+// en celular cada fila se vuelve una tarjeta (`renderCard`) en vez de forzar
+// scroll horizontal por muchas columnas.
+export function Table({ columns, rows, keyField = 'id', renderRow, renderCard, empty }) {
+  const isEmpty = !rows || rows.length === 0;
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-cream-300">
-      <table className="w-full min-w-max text-sm">
-        <thead>
-          <tr className="bg-ink-900 text-white">
-            {columns.map((col) => (
-              <th key={col} className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide">
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-cream-200 bg-white">{children}</tbody>
-      </table>
-      {empty && (
-        <div className="py-10 text-center text-sm text-ink-300">{empty}</div>
-      )}
-    </div>
+    <>
+      <div className="hidden overflow-x-auto rounded-lg border border-cream-300 md:block">
+        <table className="w-full min-w-max text-sm">
+          <thead>
+            <tr className="bg-ink-900 text-white">
+              {columns.map((col) => (
+                <th key={col} className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-cream-200 bg-white">
+            {!isEmpty && rows.map((row) => renderRow(row))}
+          </tbody>
+        </table>
+        {isEmpty && empty && (
+          <div className="py-10 text-center text-sm text-ink-300">{empty}</div>
+        )}
+      </div>
+
+      <div className="space-y-2 md:hidden">
+        {!isEmpty && rows.map((row) => (
+          <div key={row[keyField]} className="rounded-lg border border-cream-300 bg-white p-3 shadow-sm">
+            {renderCard(row)}
+          </div>
+        ))}
+        {isEmpty && empty && (
+          <div className="rounded-lg border border-cream-300 bg-white py-10 text-center text-sm text-ink-300">
+            {empty}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -147,18 +169,18 @@ export function EmptyState({ icon = '📦', title, subtitle }) {
 export function Modal({ open, onClose, title, children, width = 'max-w-md' }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/50 p-3 sm:p-4" onClick={onClose}>
       <div
-        className={`w-full ${width} rounded-xl bg-white p-6 shadow-xl`}
+        className={`flex max-h-[90vh] w-full ${width} flex-col rounded-xl bg-white shadow-xl`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between border-b border-cream-200 px-4 py-3 sm:px-6 sm:py-4">
           <h2 className="text-lg font-bold text-ink-900">{title}</h2>
           <button onClick={onClose} className="text-ink-300 hover:text-ink-600 text-xl leading-none">
             &times;
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">{children}</div>
       </div>
     </div>
   );

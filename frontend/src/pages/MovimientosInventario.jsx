@@ -301,9 +301,9 @@ export default function MovimientosInventario() {
         </div>
         <Table
           columns={['Fecha', 'Tipo', 'Lote', 'Producto', 'Cajas', 'Kilos', 'Motivo', 'Obs.', 'Estado', '']}
+          rows={movimientos}
           empty={!loading && movimientos.length === 0 ? 'Sin movimientos para estos filtros' : null}
-        >
-          {movimientos.map((m) => (
+          renderRow={(m) => (
             <tr key={m.id}>
               <td className="px-3 py-2 whitespace-nowrap">{formatDateMX(m.fecha)}</td>
               <td className="px-3 py-2"><Pill tone={TIPO_TONE[m.tipo_movimiento]}>{m.tipo_movimiento}</Pill></td>
@@ -336,8 +336,39 @@ export default function MovimientosInventario() {
                 </div>
               </td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(m) => (
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Pill tone={TIPO_TONE[m.tipo_movimiento]}>{m.tipo_movimiento}</Pill>
+                  <p className="font-semibold text-ink-900">Lote {m.lote_num}</p>
+                </div>
+                <Pill tone={ESTADO_TONE[m.estado]}>{m.estado}</Pill>
+              </div>
+              <p className="mt-1 text-sm text-ink-700">{m.producto}</p>
+              <p className="text-sm text-ink-500">
+                {formatDateMX(m.fecha)} · {m.cajas} cajas · {formatNumber(m.kilos, 2)} kg · <span className="capitalize">{m.motivo}</span>
+              </p>
+              {m.observaciones && <p className="mt-1 text-sm text-ink-500">Obs.: {m.observaciones}</p>}
+              {m.estado !== 'pendiente' && m.comentario_autorizacion && (
+                <p className="mt-1 text-xs text-ink-400">{m.comentario_autorizacion}</p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-4 border-t border-cream-200 pt-2 text-sm">
+                {esAdmin && m.estado === 'pendiente' && (
+                  <>
+                    <button onClick={() => setMovAAutorizar(m.id)} className="text-emerald-600 hover:text-emerald-800">Autorizar</button>
+                    <button onClick={() => setMovARechazar(m.id)} className="text-red-500 hover:text-red-700">Rechazar</button>
+                  </>
+                )}
+                {m.estado === 'pendiente' && (
+                  <button onClick={() => abrirEdicion(m)} className="text-blue-600 hover:text-blue-800">Editar</button>
+                )}
+                <button onClick={() => setMovAEliminar(m.id)} className="text-red-500 hover:text-red-700">Eliminar</button>
+              </div>
+            </div>
+          )}
+        />
       </Card>
 
       <JustificacionModal
@@ -370,7 +401,7 @@ export default function MovimientosInventario() {
       <Modal open={!!movAEditar} onClose={() => setMovAEditar(null)} title="Editar movimiento" width="max-w-lg">
         {editForm && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Tipo de movimiento">
                 <Select value={editForm.tipo_movimiento} onChange={(e) => setEditForm({ ...editForm, tipo_movimiento: e.target.value })}>
                   {tiposMovimiento.map((t) => <option key={t} value={t} className="capitalize">{t}</option>)}
@@ -382,7 +413,7 @@ export default function MovimientosInventario() {
                 </Select>
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Cajas">
                 <Input type="number" value={editForm.cajas} onChange={(e) => setEditForm({ ...editForm, cajas: e.target.value })} />
               </Field>

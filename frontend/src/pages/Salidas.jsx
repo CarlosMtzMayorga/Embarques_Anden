@@ -41,9 +41,10 @@ export default function Salidas() {
       <Card className="p-4">
         <Table
           columns={['Folio', 'Fecha', 'Cliente', 'Cajas', 'Kilos', '']}
+          rows={folios}
+          keyField="folio"
           empty={!loading && folios.length === 0 ? 'Sin salidas registradas — usa "Nueva salida" para empezar' : null}
-        >
-          {folios.map((f) => (
+          renderRow={(f) => (
             <tr key={f.folio}>
               <td className="px-3 py-2 font-bold text-brand-600">{f.folio}</td>
               <td className="px-3 py-2 whitespace-nowrap">{formatDateMX(f.fecha)}</td>
@@ -56,8 +57,24 @@ export default function Salidas() {
                 </button>
               </td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(f) => (
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-bold text-brand-600">Folio {f.folio}</p>
+                <Pill tone="blue">{f.cajas} cajas</Pill>
+              </div>
+              <p className="mt-1 text-sm text-ink-700">{f.cliente_nombre}</p>
+              <p className="text-sm text-ink-500">{formatDateMX(f.fecha)} · {formatNumber(f.kilos, 2)} kg</p>
+              <button
+                onClick={() => navigate(`/salidas/${f.folio}`)}
+                className="mt-3 w-full rounded-lg border border-cream-300 py-2 text-sm font-semibold text-brand-600 hover:bg-cream-100"
+              >
+                Ver / continuar
+              </button>
+            </div>
+          )}
+        />
       </Card>
     </div>
   );

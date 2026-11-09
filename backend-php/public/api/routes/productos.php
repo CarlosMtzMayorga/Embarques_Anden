@@ -15,7 +15,7 @@ $router->get('/tipos-ganado', function () {
 });
 
 $router->post('/', function () {
-    requireAuth();
+    requireAdmin(requireAuth());
     $body = requestBody();
     $codigo = $body['codigo'] ?? null;
     $nombre = $body['nombre'] ?? null;
@@ -30,7 +30,7 @@ $router->post('/', function () {
 });
 
 $router->put('/:id', function ($params) {
-    requireAuth();
+    requireAdmin(requireAuth());
     $body = requestBody();
     $activo = array_key_exists('activo', $body) ? (($body['activo']) ? 1 : 0) : 1;
     $stmt = db()->prepare('UPDATE productos SET codigo=?, nombre=?, tipo_ganado=?, activo=? WHERE id=?');
@@ -44,7 +44,7 @@ $router->put('/:id', function ($params) {
 });
 
 $router->delete('/:id', function ($params) {
-    requireAuth();
+    requireAdmin(requireAuth());
     $stmt = db()->prepare('UPDATE productos SET activo=0 WHERE id=?');
     $stmt->execute([$params['id']]);
     jsonResponse(['ok' => true]);

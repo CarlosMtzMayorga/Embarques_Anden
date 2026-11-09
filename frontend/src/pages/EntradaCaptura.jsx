@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { canalesApi, entradasApi, etiquetasApi } from '../api/services';
 import { useToast } from '../context/ToastContext';
-import { useBascula } from '../context/BasculaContext';
 import { imprimirZPL } from '../lib/browserPrint';
 import { todayISO, formatNumber, formatTipoGanado } from '../lib/date';
 import { Banner, Button, Card, Field, Input, JustificacionModal, PageHeader, Pill, Table } from '../components/ui';
@@ -18,7 +17,6 @@ export default function EntradaCaptura() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
-  const { conectada: basculaConectada, peso: pesoBascula } = useBascula();
 
   const [lote, setLote] = useState(null);
   const [loadingLote, setLoadingLote] = useState(true);
@@ -39,13 +37,6 @@ export default function EntradaCaptura() {
   function volver() {
     navigate('/entradas');
   }
-
-  // Con báscula conectada, el peso se toma en vivo del puerto serial —
-  // el campo "Kilos" refleja lo que marca la báscula, no se captura a mano.
-  useEffect(() => {
-    if (!basculaConectada || pesoBascula === null || !form.codigo) return;
-    setForm((f) => ({ ...f, kilos: String(pesoBascula) }));
-  }, [basculaConectada, pesoBascula, form.codigo]);
 
   useEffect(() => {
     setLoadingLote(true);
@@ -175,13 +166,13 @@ export default function EntradaCaptura() {
   }, [entradas]);
 
   if (loadingLote) {
-    return <PageHeader title="Entradas" subtitle="Cargando lote…" />;
+    return <PageHeader title="Producto Terminado" subtitle="Cargando lote…" />;
   }
 
   return (
     <div>
       <PageHeader
-        title={`Entradas — Lote ${lote?.numero ?? ''}`}
+        title={`Producto Terminado — Lote ${lote?.numero ?? ''}`}
         subtitle="Captura de cajas de producto terminado — una etiqueta por caja"
         actions={<Button variant="outline" onClick={volver}>← Volver a lotes</Button>}
       />
@@ -211,35 +202,21 @@ export default function EntradaCaptura() {
             {form.producto && <p className="mt-1 text-xs font-medium text-emerald-600">{form.producto}</p>}
           </Field>
           <Field label="Kilos (de esta caja)">
-            <div className="flex gap-2">
-              <Input
-                ref={kilosRef}
-                type="number"
-                step="0.01"
-                disabled={!form.codigo}
-                readOnly={basculaConectada}
-                value={form.kilos}
-                onChange={(e) => !basculaConectada && setForm({ ...form, kilos: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (puedeAgregar) agregar();
-                  }
-                }}
-                placeholder={basculaConectada ? 'Esperando peso de báscula…' : '0.00'}
-                className={basculaConectada ? 'font-mono font-semibold text-brand-700' : ''}
-              />
-              {basculaConectada && (
-                <Pill tone={pesoBascula !== null ? 'green' : 'gray'}>
-                  ⚖️ {pesoBascula !== null ? `${pesoBascula} kg en vivo` : 'sin lectura'}
-                </Pill>
-              )}
-            </div>
-            {basculaConectada && (
-              <p className="mt-1 text-xs text-ink-400">
-                El peso se toma en vivo de la báscula — da Enter para registrar e imprimir con el peso actual.
-              </p>
-            )}
+            <Input
+              ref={kilosRef}
+              type="number"
+              step="0.01"
+              disabled={!form.codigo}
+              value={form.kilos}
+              onChange={(e) => setForm({ ...form, kilos: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (puedeAgregar) agregar();
+                }
+              }}
+              placeholder="0.00"
+            />
           </Field>
         </div>
 
@@ -281,24 +258,33 @@ export default function EntradaCaptura() {
         </div>
         <Table
           columns={['Código', 'Producto', 'Cajas', 'Kilos']}
+          rows={porProducto}
+          keyField="codigo"
           empty={!loading && entradas.length === 0 ? 'Sin entradas para este lote' : null}
-        >
-          {porProducto.map((g) => (
+          renderRow={(g) => (
             <tr key={g.codigo}>
               <td className="px-3 py-2">{g.codigo}</td>
               <td className="px-3 py-2">{g.producto}</td>
               <td className="px-3 py-2">{g.cajas}</td>
               <td className="px-3 py-2">{formatNumber(g.kilos, 2)}</td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(g) => (
+            <div>
+              <p className="font-semibold text-ink-900">{g.codigo} — {g.producto}</p>
+              <p className="text-sm text-ink-500">{g.cajas} cajas · {formatNumber(g.kilos, 2)} kg</p>
+            </div>
+          )}
+        />
       </Card>
 
       {entradas.length > 0 && (
         <Card className="mt-4 p-4">
           <p className="mb-3 text-sm font-semibold text-ink-700">Detalle por caja</p>
-          <Table columns={['Caja', 'Código de barras', 'Código', 'Producto', 'Kilos', '']}>
-            {entradas.map((e) => (
+          <Table
+            columns={['Caja', 'Código de barras', 'Código', 'Producto', 'Kilos', '']}
+            rows={entradas}
+            renderRow={(e) => (
               <tr key={e.id}>
                 <td className="px-3 py-2">{e.caja ?? '—'}</td>
                 <td className="px-3 py-2 font-mono text-xs">{e.barcode || '—'}</td>
@@ -309,8 +295,18 @@ export default function EntradaCaptura() {
                   <button onClick={() => setEntradaAEliminar(e.id)} className="text-red-500 hover:text-red-700">Eliminar</button>
                 </td>
               </tr>
-            ))}
-          </Table>
+            )}
+            renderCard={(e) => (
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-ink-900">Caja {e.caja ?? '—'} — {e.producto}</p>
+                  <button onClick={() => setEntradaAEliminar(e.id)} className="text-sm text-red-500 hover:text-red-700">Eliminar</button>
+                </div>
+                <p className="text-sm text-ink-500">{e.codigo} · {formatNumber(e.kilos, 2)} kg</p>
+                {e.barcode && <p className="mt-1 font-mono text-xs text-ink-400">{e.barcode}</p>}
+              </div>
+            )}
+          />
         </Card>
       )}
 

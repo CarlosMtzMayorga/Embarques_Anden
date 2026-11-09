@@ -88,6 +88,14 @@ export const bitacoraApi = {
   acciones: () => client.get('/bitacora/acciones').then((r) => r.data),
 };
 
+export const usuariosApi = {
+  list: () => client.get('/usuarios').then((r) => r.data),
+  create: (usuario) => client.post('/usuarios', usuario).then((r) => r.data),
+  update: (id, usuario) => client.put(`/usuarios/${id}`, usuario).then((r) => r.data),
+  resetPassword: (id) => client.put(`/usuarios/${id}/reset-password`).then((r) => r.data),
+  setActivo: (id, activo) => client.put(`/usuarios/${id}/activo`, { activo }).then((r) => r.data),
+};
+
 export const reportesApi = {
   entradas: (params) => client.get('/reportes/entradas', { params }).then((r) => r.data),
   salidas: (params) => client.get('/reportes/salidas', { params }).then((r) => r.data),

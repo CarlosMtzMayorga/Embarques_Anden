@@ -4,7 +4,7 @@ const requireAdmin = require('../middleware/requireAdmin');
 const pool         = require('../db');
 const { getMemBitacora } = require('../lib/bitacora');
 
-const TABLAS_AUDITADAS = ['canales', 'entradas', 'salidas', 'etiquetas', 'movimientos_inventario'];
+const TABLAS_AUDITADAS = ['canales', 'entradas', 'salidas', 'etiquetas', 'movimientos_inventario', 'usuarios'];
 const ACCIONES = ['crear', 'editar', 'eliminar', 'autorizar', 'rechazar'];
 
 async function dbOk() {

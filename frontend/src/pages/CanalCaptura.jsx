@@ -312,7 +312,8 @@ export default function CanalCaptura() {
   const guardPesoFrio = guardados.reduce((s, c) => s + Number(c.peso_frio || 0), 0);
 
   const filas = [...guardados.map((g) => ({ ...g, _saved: true })), ...pendientes.map((p) => ({ ...p, _saved: false }))]
-    .sort((a, b) => a.consecutivo - b.consecutivo);
+    .sort((a, b) => a.consecutivo - b.consecutivo)
+    .map((f, i) => ({ ...f, _num: i + 1, _key: f.id ?? `pend-${i}` }));
 
   if (loadingLote) {
     return (
@@ -450,7 +451,7 @@ export default function CanalCaptura() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="rounded-lg border border-cream-300 p-4">
               <p className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-400">Peso</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Field label="Caliente (kg) — opcional">
                   <Input
                     type="number"
@@ -502,7 +503,7 @@ export default function CanalCaptura() {
                   </Field>
                 </div>
               ) : (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {['cuarto_1', 'cuarto_2', 'cuarto_3', 'cuarto_4'].map((key, i) => (
                     <Field key={key} label={`${i + 1}/4`}>
                       <Input type="number" step="0.01" value={canalForm[key]} onChange={(e) => setCanalForm({ ...canalForm, [key]: e.target.value })} placeholder="0.00" />
@@ -523,7 +524,7 @@ export default function CanalCaptura() {
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button variant={puedeAgregar ? 'primary' : 'soft'} disabled={!puedeAgregar} onClick={agregarCanal}>
               + Agregar
             </Button>
@@ -533,7 +534,7 @@ export default function CanalCaptura() {
             <Button variant="outline" onClick={() => setCanalForm(emptyCanalForm)}>
               Limpiar
             </Button>
-            <Button variant="blue" disabled={finalizando} onClick={finalizar} className="ml-auto">
+            <Button variant="blue" disabled={finalizando} onClick={finalizar} className="sm:ml-auto">
               {finalizando ? 'Finalizando…' : 'Finalizar y volver a lotes →'}
             </Button>
           </div>
@@ -554,11 +555,12 @@ export default function CanalCaptura() {
           <div className="mt-4">
             <Table
               columns={['#', 'Cons.', 'P. Caliente', 'P. Frío', 'Dif %', '1/2', '2/2', '1/4', '2/4', '3/4', '4/4', 'Obs.', '']}
+              rows={filas}
+              keyField="_key"
               empty={filas.length === 0 ? 'Sin registros' : null}
-            >
-              {filas.map((f, i) => (
-                <tr key={f.id ?? `pend-${i}`} className={f._saved ? '' : 'bg-amber-50/60'}>
-                  <td className="px-3 py-2">{i + 1}</td>
+              renderRow={(f) => (
+                <tr key={f._key} className={f._saved ? '' : 'bg-amber-50/60'}>
+                  <td className="px-3 py-2">{f._num}</td>
                   <td className="px-3 py-2">{f.consecutivo}</td>
                   <td className="px-3 py-2">{formatNumber(f.peso_caliente, 2)}</td>
                   <td className="px-3 py-2">{formatNumber(f.peso_frio, 2)}</td>
@@ -585,8 +587,43 @@ export default function CanalCaptura() {
                     )}
                   </td>
                 </tr>
-              ))}
-            </Table>
+              )}
+              renderCard={(f) => (
+                <div className={f._saved ? '' : '-m-3 rounded-lg bg-amber-50/60 p-3'}>
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-ink-900">Canal #{f._num} · Cons. {f.consecutivo}</p>
+                    {f._saved ? <Pill tone="gray">guardada</Pill> : <Pill tone="orange">pendiente</Pill>}
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
+                    <p><span className="text-ink-400">Caliente:</span> {formatNumber(f.peso_caliente, 2)}</p>
+                    <p><span className="text-ink-400">Frío:</span> {formatNumber(f.peso_frio, 2)}</p>
+                    <p><span className="text-ink-400">Dif %:</span> {formatNumber(f.diferencia_pct, 2)}</p>
+                  </div>
+                  <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-ink-600 sm:grid-cols-4">
+                    {f.tipo === 'medios' ? (
+                      <>
+                        <p><span className="text-ink-400">1/2:</span> {formatNumber(f.medio_1, 2)}</p>
+                        <p><span className="text-ink-400">2/2:</span> {formatNumber(f.medio_2, 2)}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p><span className="text-ink-400">1/4:</span> {formatNumber(f.cuarto_1, 2)}</p>
+                        <p><span className="text-ink-400">2/4:</span> {formatNumber(f.cuarto_2, 2)}</p>
+                        <p><span className="text-ink-400">3/4:</span> {formatNumber(f.cuarto_3, 2)}</p>
+                        <p><span className="text-ink-400">4/4:</span> {formatNumber(f.cuarto_4, 2)}</p>
+                      </>
+                    )}
+                  </div>
+                  {f.observaciones && <p className="mt-1 text-sm text-ink-500">Obs.: {f.observaciones}</p>}
+                  {f._saved && (
+                    <div className="mt-3 flex gap-4 border-t border-cream-200 pt-2 text-sm">
+                      <button onClick={() => abrirEdicion(f)} className="text-blue-600 hover:text-blue-800">Editar</button>
+                      <button onClick={() => setCanalAEliminar(f.id)} className="text-red-500 hover:text-red-700">Eliminar</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            />
           </div>
         </Card>
       )}
@@ -602,7 +639,7 @@ export default function CanalCaptura() {
       <Modal open={!!canalAEditar} onClose={() => setCanalAEditar(null)} title={`Editar canal #${canalAEditar?.consecutivo ?? ''}`} width="max-w-lg">
         {editForm && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Field label="Caliente (kg)">
                 <Input
                   type="number"
@@ -640,7 +677,7 @@ export default function CanalCaptura() {
                 </Field>
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {['cuarto_1', 'cuarto_2', 'cuarto_3', 'cuarto_4'].map((key, i) => (
                   <Field key={key} label={`${i + 1}/4`}>
                     <Input type="number" step="0.01" value={editForm[key]} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })} />

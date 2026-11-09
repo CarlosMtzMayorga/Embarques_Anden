@@ -24,6 +24,7 @@ app.use('/api/existencias', require('./routes/existencias'));
 app.use('/api/movimientos', require('./routes/movimientos'));
 app.use('/api/reportes',    require('./routes/reportes'));
 app.use('/api/bitacora',    require('./routes/bitacora'));
+app.use('/api/usuarios',    require('./routes/usuarios'));
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
 

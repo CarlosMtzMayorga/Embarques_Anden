@@ -242,9 +242,9 @@ export default function SalidaCaptura() {
         </div>
         <Table
           columns={['Fecha', 'Código', 'Lote/Canal', 'Producto', 'Cajas', 'Kilos', 'Entregó', 'Obs.', '']}
+          rows={salidas}
           empty={salidas.length === 0 ? 'Sin cajas guardadas para este folio' : null}
-        >
-          {salidas.map((s) => (
+          renderRow={(s) => (
             <tr key={s.id}>
               <td className="px-3 py-2 whitespace-nowrap">{formatDateMX(s.fecha)}</td>
               <td className="px-3 py-2 font-mono text-xs">{s.barcode || '—'}</td>
@@ -261,8 +261,24 @@ export default function SalidaCaptura() {
                 </div>
               </td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(s) => (
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold text-ink-900">{s.producto}</p>
+                <span className="text-xs text-ink-400">{formatDateMX(s.fecha)}</span>
+              </div>
+              <p className="text-sm text-ink-500">Lote/Canal {s.lote_canal} · {s.cajas} cajas · {formatNumber(s.kilos, 2)} kg</p>
+              {s.barcode && <p className="mt-1 font-mono text-xs text-ink-400">{s.barcode}</p>}
+              <p className="mt-1 text-sm text-ink-500">Entregó: {s.entregado_por || '—'}</p>
+              {s.observaciones && <p className="text-sm text-ink-500">Obs.: {s.observaciones}</p>}
+              <div className="mt-3 flex gap-4 border-t border-cream-200 pt-2 text-sm">
+                <button onClick={() => abrirEdicion(s)} className="text-blue-600 hover:text-blue-800">Editar</button>
+                <button onClick={() => eliminar(s.id)} className="text-red-500 hover:text-red-700">Eliminar</button>
+              </div>
+            </div>
+          )}
+        />
       </Card>
 
       <Modal open={!!salidaAEditar} onClose={() => setSalidaAEditar(null)} title={`Editar salida — Folio ${salidaAEditar?.folio ?? ''}`} width="max-w-lg">

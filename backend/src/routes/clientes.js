@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const auth   = require('../middleware/auth');
+const requireAdmin = require('../middleware/requireAdmin');
 const pool   = require('../db');
 
 let memClientes = [
@@ -24,7 +25,7 @@ router.get('/', auth, async (req, res) => {
   res.json(memClientes.slice().sort((a, b) => b.activo - a.activo));
 });
 
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, requireAdmin, async (req, res) => {
   const { nombre, rfc, contacto, telefono } = req.body;
   if (await dbOk()) {
     try {
@@ -41,7 +42,7 @@ router.post('/', auth, async (req, res) => {
   res.json(c);
 });
 
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, requireAdmin, async (req, res) => {
   const { nombre, rfc, contacto, telefono, activo } = req.body;
   const { id } = req.params;
   if (await dbOk()) {
@@ -60,7 +61,7 @@ router.put('/:id', auth, async (req, res) => {
   res.json(memClientes[idx]);
 });
 
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, requireAdmin, async (req, res) => {
   const { id } = req.params;
   if (await dbOk()) {
     try {

@@ -1,7 +1,7 @@
 <?php
 // Espejo de backend/src/routes/bitacora.js — todo admin-gated.
 
-const BITACORA_TABLAS = ['canales', 'entradas', 'salidas', 'etiquetas', 'movimientos_inventario'];
+const BITACORA_TABLAS = ['canales', 'entradas', 'salidas', 'etiquetas', 'movimientos_inventario', 'usuarios'];
 const BITACORA_ACCIONES = ['crear', 'editar', 'eliminar', 'autorizar', 'rechazar'];
 
 $router->get('/tablas', function () {

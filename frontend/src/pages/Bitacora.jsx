@@ -83,9 +83,9 @@ export default function Bitacora() {
         </div>
         <Table
           columns={['Fecha', 'Usuario', 'Acción', 'Tabla', 'Registro', 'Justificación', '']}
+          rows={registros}
           empty={!loading && registros.length === 0 ? 'Sin movimientos para estos filtros' : null}
-        >
-          {registros.map((r) => (
+          renderRow={(r) => (
             <tr key={r.id}>
               <td className="px-3 py-2 whitespace-nowrap">{formatDateMX(r.fecha)} {new Date(r.fecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</td>
               <td className="px-3 py-2">{r.usuario_nombre || '—'}</td>
@@ -97,14 +97,33 @@ export default function Bitacora() {
                 <button onClick={() => setDetalle(r)} className="text-brand-600 hover:underline">Ver detalle</button>
               </td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(r) => (
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <Pill tone={ACCION_TONE[r.accion] || 'gray'}>{r.accion}</Pill>
+                <span className="text-xs text-ink-400">
+                  {formatDateMX(r.fecha)} {new Date(r.fecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-ink-700 capitalize">{r.tabla} · registro {r.registro_id}</p>
+              <p className="text-sm text-ink-500">{r.usuario_nombre || '—'}</p>
+              <p className="mt-1 truncate text-sm text-ink-500" title={r.justificacion}>{r.justificacion}</p>
+              <button
+                onClick={() => setDetalle(r)}
+                className="mt-2 text-sm text-brand-600 hover:underline"
+              >
+                Ver detalle
+              </button>
+            </div>
+          )}
+        />
       </Card>
 
       <Modal open={!!detalle} onClose={() => setDetalle(null)} title="Detalle del movimiento" width="max-w-2xl">
         {detalle && (
           <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-2 gap-2 text-xs text-ink-500">
+            <div className="grid grid-cols-1 gap-2 text-xs text-ink-500 sm:grid-cols-2">
               <p><span className="font-semibold text-ink-700">Usuario:</span> {detalle.usuario_nombre}</p>
               <p><span className="font-semibold text-ink-700">Acción:</span> {detalle.accion}</p>
               <p><span className="font-semibold text-ink-700">Tabla:</span> {detalle.tabla}</p>
@@ -114,13 +133,13 @@ export default function Bitacora() {
             {detalle.datos_antes && (
               <div>
                 <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-400">Antes</p>
-                <pre className="max-h-48 overflow-auto rounded-lg bg-cream-100 p-3 text-xs">{JSON.stringify(detalle.datos_antes, null, 2)}</pre>
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-cream-100 p-3 text-xs">{JSON.stringify(detalle.datos_antes, null, 2)}</pre>
               </div>
             )}
             {detalle.datos_despues && (
               <div>
                 <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-400">Después</p>
-                <pre className="max-h-48 overflow-auto rounded-lg bg-cream-100 p-3 text-xs">{JSON.stringify(detalle.datos_despues, null, 2)}</pre>
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-cream-100 p-3 text-xs">{JSON.stringify(detalle.datos_despues, null, 2)}</pre>
               </div>
             )}
           </div>

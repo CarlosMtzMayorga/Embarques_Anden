@@ -103,7 +103,7 @@ function BuscarEtiquetas() {
       <Card className="p-4 mb-4">
         <div className="flex flex-wrap items-end gap-3">
           <Field label="Artículo">
-            <Select value={filtros.codigo} onChange={(e) => setFiltros({ ...filtros, codigo: e.target.value })} className="w-56">
+            <Select value={filtros.codigo} onChange={(e) => setFiltros({ ...filtros, codigo: e.target.value })} className="w-full sm:w-56">
               <option value="">Todos</option>
               {productos.map((p) => <option key={p.codigo} value={p.codigo}>{p.codigo} — {p.nombre}</option>)}
             </Select>
@@ -130,9 +130,9 @@ function BuscarEtiquetas() {
         <div className="mt-3">
           <Table
             columns={['Fecha', 'Lote', 'Código', 'Producto', 'Caja', 'Kilos', 'Código de barras', 'Impresa', 'Estado', 'Existencia', '']}
+            rows={resultados}
             empty={buscado && !loading && resultados.length === 0 ? 'Sin etiquetas para estos filtros' : (!buscado ? 'Define los filtros y presiona Buscar' : null)}
-          >
-            {resultados.map((e) => (
+            renderRow={(e) => (
               <tr key={e.id}>
                 <td className="px-3 py-2 whitespace-nowrap">{formatDateMX(e.fecha)}</td>
                 <td className="px-3 py-2">{e.lote_num}</td>
@@ -167,8 +167,39 @@ function BuscarEtiquetas() {
                   )}
                 </td>
               </tr>
-            ))}
-          </Table>
+            )}
+            renderCard={(e) => (
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-mono text-sm font-semibold text-ink-900">{e.barcode}</p>
+                  <Pill tone={e.activa ? 'green' : 'gray'}>{e.activa ? 'Activa' : 'Eliminada'}</Pill>
+                </div>
+                <p className="mt-1 text-sm text-ink-700">{e.producto}</p>
+                <p className="text-sm text-ink-500">
+                  Lote {e.lote_num} · Caja {e.caja} · {formatNumber(e.kilos, 2)} kg
+                </p>
+                <div className="mt-1 flex items-center gap-2 text-xs text-ink-400">
+                  <span>{formatDateMX(e.fecha)}</span>
+                  <span>· {e.veces_impresa}x impresa</span>
+                  <Pill tone={e.embarcada ? 'blue' : 'teal'}>{e.embarcada ? 'Ya salió' : 'En existencia'}</Pill>
+                </div>
+                {e.activa && (
+                  <div className="mt-3 flex gap-4 border-t border-cream-200 pt-2 text-sm">
+                    <button
+                      onClick={() => reimprimir(e)}
+                      disabled={reimprimiendoId === e.id}
+                      className="text-brand-600 hover:underline disabled:opacity-50"
+                    >
+                      {reimprimiendoId === e.id ? 'Enviando…' : 'Reimprimir'}
+                    </button>
+                    <button onClick={() => setEtiquetaAEliminar(e.id)} className="text-red-500 hover:text-red-700">
+                      Eliminar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          />
         </div>
       </Card>
 
@@ -247,7 +278,7 @@ function GenerarManual() {
           Herramienta manual para regenerar un ZPL (pruebas de impresora / casos fuera del flujo normal). No queda guardada en el sistema.
         </p>
         <form onSubmit={generar} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Lote">
               <Input value={form.lote} onChange={(e) => setForm({ ...form, lote: e.target.value })} placeholder="717" required />
             </Field>
@@ -261,7 +292,7 @@ function GenerarManual() {
               {productos.map((p) => <option key={p.codigo} value={p.codigo}>{p.codigo} — {p.nombre}</option>)}
             </Select>
           </Field>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Kilos">
               <Input type="number" step="0.01" value={form.kilos} onChange={(e) => setForm({ ...form, kilos: e.target.value })} placeholder="0.00" required />
             </Field>

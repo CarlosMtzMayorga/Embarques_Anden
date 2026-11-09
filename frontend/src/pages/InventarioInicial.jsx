@@ -146,9 +146,10 @@ export default function InventarioInicial() {
       <Card className="mt-4 p-4">
         <Table
           columns={['Código de barras', 'Código', 'Producto', 'Lote', 'Caja', 'Kilos', '']}
+          rows={renglones.map((r, i) => ({ ...r, _idx: i }))}
+          keyField="barcode"
           empty={renglones.length === 0 ? 'Aún no se ha escaneado ninguna caja' : null}
-        >
-          {renglones.map((r, i) => (
+          renderRow={(r) => (
             <tr key={r.barcode}>
               <td className="px-3 py-2 font-mono text-xs">{r.barcode}</td>
               <td className="px-3 py-2">{r.codigo}</td>
@@ -157,11 +158,21 @@ export default function InventarioInicial() {
               <td className="px-3 py-2">{r.caja}</td>
               <td className="px-3 py-2">{formatNumber(r.kilos, 2)}</td>
               <td className="px-3 py-2">
-                <button onClick={() => quitarRenglon(i)} className="text-red-500 hover:text-red-700">Quitar</button>
+                <button onClick={() => quitarRenglon(r._idx)} className="text-red-500 hover:text-red-700">Quitar</button>
               </td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(r) => (
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-mono text-xs text-ink-500">{r.barcode}</p>
+                <button onClick={() => quitarRenglon(r._idx)} className="text-sm text-red-500 hover:text-red-700">Quitar</button>
+              </div>
+              <p className="mt-1 text-sm font-semibold text-ink-900">{r.producto}</p>
+              <p className="text-sm text-ink-500">Lote {r.lote} · Caja {r.caja} · {formatNumber(r.kilos, 2)} kg</p>
+            </div>
+          )}
+        />
       </Card>
     </div>
   );

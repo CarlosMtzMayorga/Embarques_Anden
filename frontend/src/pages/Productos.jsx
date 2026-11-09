@@ -80,9 +80,9 @@ export default function Productos() {
 
       <Table
         columns={['Código', 'Nombre', 'Tipo de ganado', 'Estado', '']}
+        rows={productos}
         empty={!loading && productos.length === 0 ? 'Sin productos registrados' : null}
-      >
-        {productos.map((p) => (
+        renderRow={(p) => (
           <tr key={p.id}>
             <td className="px-3 py-2 font-medium">{p.codigo}</td>
             <td className="px-3 py-2">{p.nombre}</td>
@@ -97,8 +97,23 @@ export default function Productos() {
               </button>
             </td>
           </tr>
-        ))}
-      </Table>
+        )}
+        renderCard={(p) => (
+          <div>
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-semibold text-ink-900">{p.codigo} — {p.nombre}</p>
+              <Pill tone={p.activo ? 'green' : 'gray'}>{p.activo ? 'Activo' : 'Inactivo'}</Pill>
+            </div>
+            <p className="mt-1 text-sm text-ink-500">{p.tipo_ganado}</p>
+            <div className="mt-3 flex gap-4 border-t border-cream-200 pt-2 text-sm">
+              <button onClick={() => abrirEditar(p)} className="text-blue-600 hover:text-blue-800">Editar</button>
+              <button onClick={() => toggleActivo(p)} className="text-red-500 hover:text-red-700">
+                {p.activo ? 'Desactivar' : 'Activar'}
+              </button>
+            </div>
+          </div>
+        )}
+      />
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar producto' : 'Nuevo producto'}>
         <form onSubmit={guardar} className="space-y-4">

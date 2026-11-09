@@ -24,16 +24,16 @@ export default function Entradas() {
   return (
     <div>
       <PageHeader
-        title="Entradas"
+        title="Producto Terminado"
         subtitle="Selecciona un lote para capturar sus cajas de producto terminado"
       />
 
       <Card className="p-4">
         <Table
           columns={['Folio', 'Fecha', 'Tipo de ganado', 'Cajas capturadas', 'Kilos capturados', '']}
+          rows={lotes}
           empty={!loading && lotes.length === 0 ? 'Sin lotes registrados — captura uno en Canales / Romaneaje' : null}
-        >
-          {lotes.map((l) => {
+          renderRow={(l) => {
             const r = resumen[l.id];
             return (
               <tr key={l.id}>
@@ -49,8 +49,27 @@ export default function Entradas() {
                 </td>
               </tr>
             );
-          })}
-        </Table>
+          }}
+          renderCard={(l) => {
+            const r = resumen[l.id];
+            return (
+              <div>
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-bold text-brand-600">Lote {l.numero}</p>
+                  <Pill tone="blue">{r?.num_cajas || 0} cajas</Pill>
+                </div>
+                <p className="mt-1 text-sm text-ink-700">{formatTipoGanado(l.tipo_ganado)}</p>
+                <p className="text-sm text-ink-500">{formatDateMX(l.fecha)} · {formatNumber(r?.kilos_total || 0, 2)} kg</p>
+                <button
+                  onClick={() => navigate(`/entradas/${l.id}`)}
+                  className="mt-3 w-full rounded-lg border border-cream-300 py-2 text-sm font-semibold text-brand-600 hover:bg-cream-100"
+                >
+                  Capturar / continuar
+                </button>
+              </div>
+            );
+          }}
+        />
       </Card>
     </div>
   );

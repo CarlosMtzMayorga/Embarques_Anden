@@ -48,7 +48,7 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" subtitle="Empacadora Carnes Finas el Andén — TIF No. 680" />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon="↓" label="Entradas hoy" value={val(stats.entradas)} tone="green" />
+        <StatCard icon="↓" label="Producto terminado hoy" value={val(stats.entradas)} tone="green" />
         <StatCard icon="↑" label="Salidas hoy" value={val(stats.salidas)} tone="red" />
         <StatCard icon="≡" label="Existencias" value={val(stats.existencias)} tone="blue" />
         <StatCard icon="⚖" label="Canales hoy" value={val(stats.canales)} tone="orange" />
@@ -61,7 +61,7 @@ export default function Dashboard() {
             Registrar canales
           </Link>
           <Link to="/entradas" className="rounded-lg border border-cream-300 px-3 py-1.5 text-sm font-medium text-ink-600 hover:bg-cream-100">
-            Registrar entrada
+            Registrar producto terminado
           </Link>
           <Link to="/salidas" className="rounded-lg border border-cream-300 px-3 py-1.5 text-sm font-medium text-ink-600 hover:bg-cream-100">
             Registrar salida

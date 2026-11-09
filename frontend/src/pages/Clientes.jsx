@@ -76,9 +76,9 @@ export default function Clientes() {
 
       <Table
         columns={['Nombre', 'RFC', 'Contacto', 'Teléfono', 'Estado', '']}
+        rows={clientes}
         empty={!loading && clientes.length === 0 ? 'Sin clientes registrados' : null}
-      >
-        {clientes.map((c) => (
+        renderRow={(c) => (
           <tr key={c.id}>
             <td className="px-3 py-2 font-medium">{c.nombre}</td>
             <td className="px-3 py-2">{c.rfc || '—'}</td>
@@ -94,8 +94,27 @@ export default function Clientes() {
               </button>
             </td>
           </tr>
-        ))}
-      </Table>
+        )}
+        renderCard={(c) => (
+          <div>
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-semibold text-ink-900">{c.nombre}</p>
+              <Pill tone={c.activo ? 'green' : 'gray'}>{c.activo ? 'Activo' : 'Inactivo'}</Pill>
+            </div>
+            <div className="mt-1 space-y-0.5 text-sm text-ink-500">
+              {c.rfc && <p>RFC: {c.rfc}</p>}
+              {c.contacto && <p>Contacto: {c.contacto}</p>}
+              {c.telefono && <p>Tel: {c.telefono}</p>}
+            </div>
+            <div className="mt-3 flex gap-4 border-t border-cream-200 pt-2 text-sm">
+              <button onClick={() => abrirEditar(c)} className="text-blue-600 hover:text-blue-800">Editar</button>
+              <button onClick={() => toggleActivo(c)} className="text-red-500 hover:text-red-700">
+                {c.activo ? 'Desactivar' : 'Activar'}
+              </button>
+            </div>
+          </div>
+        )}
+      />
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar cliente' : 'Nuevo cliente'}>
         <form onSubmit={guardar} className="space-y-4">

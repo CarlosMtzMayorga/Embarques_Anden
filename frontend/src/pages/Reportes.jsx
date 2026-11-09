@@ -5,7 +5,7 @@ import { formatDateMX, formatNumber, formatTipoGanado, todayISO } from '../lib/d
 import { Button, Card, Field, Input, PageHeader, Pill, Table } from '../components/ui';
 
 const TABS = [
-  { key: 'entradas', label: 'Entradas' },
+  { key: 'entradas', label: 'Producto Terminado' },
   { key: 'salidas', label: 'Salidas' },
   { key: 'movimientos', label: 'Movimientos de inventario' },
   { key: 'existencias', label: 'Existencias' },
@@ -136,6 +136,75 @@ export default function Reportes() {
     );
   }
 
+  function renderCard(r) {
+    if (tab === 'entradas' && agrupado) return (
+      <div>
+        <p className="font-semibold text-ink-900">{r.codigo} — {r.producto}</p>
+        <p className="text-sm text-ink-500">{formatTipoGanado(r.tipo_ganado)}</p>
+        <p className="mt-1 text-sm"><span className="font-bold text-brand-600">{r.total_cajas} cajas</span> · {formatNumber(r.total_kilos, 2)} kg</p>
+        {r.cajas_lista && <p className="mt-1 text-xs text-ink-400">Cajas: {r.cajas_lista}</p>}
+      </div>
+    );
+    if (tab === 'entradas') return (
+      <div>
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-ink-900">{r.codigo} — {r.producto}</p>
+          <span className="text-xs text-ink-400">{formatDateMX(r.fecha)}</span>
+        </div>
+        <p className="text-sm text-ink-500">Lote {r.lote_num} · {formatTipoGanado(r.tipo_ganado)}</p>
+        <p className="mt-1 text-sm">{r.cajas} cajas · {formatNumber(r.kilos, 2)} kg</p>
+      </div>
+    );
+    if (tab === 'salidas' && agrupado) return (
+      <div>
+        <p className="font-semibold text-ink-900">{r.codigo} — {r.producto}</p>
+        <p className="text-sm text-ink-500">{formatTipoGanado(r.tipo_ganado)}</p>
+        <p className="mt-1 text-sm"><span className="font-bold text-brand-600">{r.total_cajas} cajas</span> · {formatNumber(r.total_kilos, 2)} kg · {r.num_registros} registros</p>
+      </div>
+    );
+    if (tab === 'salidas') return (
+      <div>
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-ink-900">Folio {r.folio}</p>
+          <span className="text-xs text-ink-400">{formatDateMX(r.fecha)}</span>
+        </div>
+        <p className="text-sm text-ink-500">{r.cliente_nombre} · {r.producto}</p>
+        <p className="mt-1 text-sm">{r.cajas} cajas · {formatNumber(r.kilos, 2)} kg</p>
+        <p className="text-xs text-ink-400">Lote/Canal {r.lote_canal} · Entregó: {r.entregado_por || '—'}</p>
+        {r.observaciones && <p className="mt-1 text-xs text-ink-400">Obs.: {r.observaciones}</p>}
+      </div>
+    );
+    if (tab === 'movimientos') return (
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold capitalize text-ink-900">{r.tipo_movimiento} · Lote {r.lote_num}</p>
+          <Pill tone={r.estado === 'autorizado' ? 'green' : r.estado === 'rechazado' ? 'gray' : 'orange'}>{r.estado}</Pill>
+        </div>
+        <p className="text-sm text-ink-500">{r.producto}</p>
+        <p className="mt-1 text-sm">{r.cajas} cajas · {formatNumber(r.kilos, 2)} kg · <span className="capitalize">{r.motivo}</span></p>
+        <p className="text-xs text-ink-400">{formatDateMX(r.fecha)}</p>
+        {r.observaciones && <p className="mt-1 text-xs text-ink-400">Obs.: {r.observaciones}</p>}
+      </div>
+    );
+    if (tab === 'existencias') return (
+      <div>
+        <p className="font-semibold text-ink-900">{r.codigo} — {r.producto}</p>
+        <p className="text-sm text-ink-500">{formatTipoGanado(r.tipo_ganado)}</p>
+        <p className="mt-1 text-lg font-bold text-brand-600">{r.cajas_existentes} cajas · {formatNumber(r.kilos_existentes, 2)} kg</p>
+      </div>
+    );
+    return (
+      <div>
+        <p className="font-semibold text-ink-900">Lote {r.lote_numero} · Cons. {r.consecutivo}</p>
+        <p className="text-sm text-ink-500">{r.romaneaje || '—'}</p>
+        <p className="mt-1 text-sm">
+          Caliente {formatNumber(r.peso_caliente, 2)} kg · Frío {formatNumber(r.peso_frio, 2)} kg · Dif {formatNumber(r.diferencia_pct, 2)}%
+        </p>
+        {r.lote_observaciones && <p className="mt-1 text-xs text-ink-400">Obs.: {r.lote_observaciones}</p>}
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Reportes" subtitle="Consulta y exporta la información del sistema" />
@@ -194,10 +263,12 @@ export default function Reportes() {
         <div className="mt-3">
           <Table
             columns={columnsByTab[tab]}
+            rows={rows.map((r, i) => ({ ...r, _idx: i }))}
+            keyField={rows[0]?.id !== undefined ? 'id' : '_idx'}
             empty={buscado && !loading && rows.length === 0 ? 'Sin resultados para los filtros indicados' : (!buscado ? 'Define los filtros y presiona Buscar' : null)}
-          >
-            {rows.map(renderRow)}
-          </Table>
+            renderRow={(r) => renderRow(r, r._idx)}
+            renderCard={renderCard}
+          />
         </div>
       </Card>
     </div>

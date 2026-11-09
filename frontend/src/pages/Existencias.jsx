@@ -27,10 +27,12 @@ export default function Existencias() {
 
   const filtrado = useMemo(() => {
     const q = buscar.trim().toLowerCase();
-    if (!q) return data;
-    return data.filter(
-      (d) => d.codigo?.toLowerCase().includes(q) || d.producto?.toLowerCase().includes(q) || d.tipo_ganado?.toLowerCase().includes(q)
-    );
+    const rows = !q
+      ? data
+      : data.filter(
+          (d) => d.codigo?.toLowerCase().includes(q) || d.producto?.toLowerCase().includes(q) || d.tipo_ganado?.toLowerCase().includes(q)
+        );
+    return rows.map((d) => ({ ...d, _key: `${d.codigo}-${d.tipo_ganado}` }));
   }, [data, buscar]);
 
   const totalCajas = filtrado.reduce((s, d) => s + Number(d.cajas_existentes || 0), 0);
@@ -42,7 +44,7 @@ export default function Existencias() {
         title="Existencias"
         subtitle={fecha ? `Existencia histórica al ${fecha} (entradas − salidas ± movimientos autorizados)` : 'Existencia actual (entradas − salidas ± movimientos autorizados)'}
         actions={
-          <Input placeholder="Buscar código o producto…" value={buscar} onChange={(e) => setBuscar(e.target.value)} className="w-64" />
+          <Input placeholder="Buscar código o producto…" value={buscar} onChange={(e) => setBuscar(e.target.value)} className="w-full sm:w-64" />
         }
       />
 
@@ -65,10 +67,11 @@ export default function Existencias() {
       <Card className="p-4">
         <Table
           columns={['Código', 'Producto', 'Tipo', 'Entradas (c/kg)', 'Salidas (c/kg)', 'Movimientos (c/kg)', 'Existencia (cajas)', 'Existencia (kilos)']}
+          rows={filtrado}
+          keyField="_key"
           empty={!loading && filtrado.length === 0 ? 'Sin existencias registradas' : null}
-        >
-          {filtrado.map((d) => (
-            <tr key={`${d.codigo}-${d.tipo_ganado}`}>
+          renderRow={(d) => (
+            <tr key={d._key}>
               <td className="px-3 py-2 font-medium">{d.codigo}</td>
               <td className="px-3 py-2">{d.producto}</td>
               <td className="px-3 py-2">{formatTipoGanado(d.tipo_ganado)}</td>
@@ -78,8 +81,25 @@ export default function Existencias() {
               <td className="px-3 py-2 font-bold text-brand-600">{d.cajas_existentes}</td>
               <td className="px-3 py-2 font-bold text-brand-600">{formatNumber(d.kilos_existentes, 2)}</td>
             </tr>
-          ))}
-        </Table>
+          )}
+          renderCard={(d) => (
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold text-ink-900">{d.codigo} — {d.producto}</p>
+              </div>
+              <p className="text-sm text-ink-500">{formatTipoGanado(d.tipo_ganado)}</p>
+              <div className="mt-2 flex items-baseline gap-3">
+                <span className="text-lg font-bold text-brand-600">{d.cajas_existentes} cajas</span>
+                <span className="text-sm font-semibold text-brand-600">{formatNumber(d.kilos_existentes, 2)} kg</span>
+              </div>
+              <div className="mt-2 space-y-0.5 text-xs text-ink-400">
+                <p>Entradas: {d.cajas_entradas} cajas / {formatNumber(d.kilos_entradas, 2)} kg</p>
+                <p>Salidas: {d.cajas_salidas} cajas / {formatNumber(d.kilos_salidas, 2)} kg</p>
+                <p>Movimientos: {d.cajas_movimientos} cajas / {formatNumber(d.kilos_movimientos, 2)} kg</p>
+              </div>
+            </div>
+          )}
+        />
       </Card>
     </div>
   );
