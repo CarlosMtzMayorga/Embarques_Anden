@@ -4,6 +4,7 @@ import { canalesApi, clientesApi, entradasApi, salidasApi } from '../api/service
 import { useToast } from '../context/ToastContext';
 import { todayISO, formatDateMX, formatNumber } from '../lib/date';
 import { Button, Card, Field, Input, Modal, PageHeader, Pill, Select, Table, Textarea } from '../components/ui';
+import { imprimirFormatoSalida } from '../lib/imprimirSalida';
 
 const emptyForm = {
   fecha: todayISO(),
@@ -109,6 +110,21 @@ export default function SalidaCaptura() {
     }
   }
 
+  function handleImprimir() {
+    if (!salidas.length) {
+      toast('Agrega al menos una caja para imprimir el formato', 'error');
+      return;
+    }
+    imprimirFormatoSalida({
+      folio,
+      fecha: form.fecha,
+      cliente_nombre: cliente?.nombre || '',
+      entregado_por: form.entregado_por,
+      observaciones: form.observaciones,
+      items: salidas,
+    });
+  }
+
   function finalizar() {
     navigate('/salidas');
   }
@@ -178,7 +194,21 @@ export default function SalidaCaptura() {
       <PageHeader
         title={`Salida — Folio ${folio ?? ''}`}
         subtitle="Escanea el código de barras de cada caja"
-        actions={<Button variant="outline" onClick={volver}>← Volver a salidas</Button>}
+        actions={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleImprimir}
+              disabled={salidas.length === 0}
+              title="Imprimir formato de salida o guardar como PDF"
+            >
+              🖨️ Imprimir formato
+            </Button>
+            <Button variant="outline" onClick={volver}>
+              ← Volver a salidas
+            </Button>
+          </div>
+        }
       />
 
       <Card className="p-6">
@@ -223,9 +253,17 @@ export default function SalidaCaptura() {
           </Field>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="blue" onClick={finalizar}>
             💾 Guardar y volver a salidas
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleImprimir}
+            disabled={salidas.length === 0}
+            title="Imprimir formato de salida o guardar como PDF"
+          >
+            🖨️ Imprimir formato de salida
           </Button>
         </div>
       </Card>
