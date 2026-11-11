@@ -17,13 +17,13 @@ async function dbOk() {
 
 // POST /api/etiquetas/zpl
 router.post('/zpl', auth, (req, res) => {
-  const { lote, codigo, caja, kilos, producto, fecha, romaneaje } = req.body;
+  const { lote, codigo, caja, kilos, producto, fecha, romaneaje, ingredientes } = req.body;
   if (!lote || !codigo || !kilos) {
     return res.status(400).json({ error: 'Faltan datos para generar la etiqueta' });
   }
   const cajaNum = caja || 1;
   try {
-    const zpl = renderZplEtiqueta({ lote, codigo, caja: cajaNum, kilos, producto, fecha, romaneaje });
+    const zpl = renderZplEtiqueta({ lote, codigo, caja: cajaNum, kilos, producto, fecha, romaneaje, ingredientes });
     res.json({ zpl, barcode: buildBarcode({ codigo, lote, caja: cajaNum, kilos }) });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -129,7 +129,13 @@ router.delete('/:id', auth, async (req, res) => {
 // guardados y aumenta el contador de reimpresiones.
 router.put('/:id/reimprimir', auth, async (req, res) => {
   if (await dbOk()) {
-    const [rows] = await pool.query('SELECT * FROM etiquetas WHERE id=?', [req.params.id]);
+    const [rows] = await pool.query(`
+      SELECT e.*, ie.texto AS ingredientes
+      FROM etiquetas e
+      LEFT JOIN productos p ON e.codigo = p.codigo
+      LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+      WHERE e.id=?
+    `, [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'No encontrada' });
     const etiqueta = rows[0];
     if (!etiqueta.activa) {
@@ -145,6 +151,7 @@ router.put('/:id/reimprimir', auth, async (req, res) => {
       producto: etiqueta.producto,
       fecha: etiqueta.fecha,
       romaneaje: etiqueta.romaneaje,
+      ingredientes: etiqueta.ingredientes,
     });
     return res.json({ etiqueta: { ...etiqueta, veces_impresa: etiqueta.veces_impresa + 1 }, zpl });
   }

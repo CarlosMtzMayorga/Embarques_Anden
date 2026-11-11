@@ -71,6 +71,13 @@ export const productosApi = {
   remove: (id) => client.delete(`/productos/${id}`).then((r) => r.data),
 };
 
+export const ingredientesApi = {
+  list: () => client.get('/ingredientes').then((r) => r.data),
+  create: (ingrediente) => client.post('/ingredientes', ingrediente).then((r) => r.data),
+  update: (id, ingrediente) => client.put(`/ingredientes/${id}`, ingrediente).then((r) => r.data),
+  remove: (id) => client.delete(`/ingredientes/${id}`).then((r) => r.data),
+};
+
 export const movimientosApi = {
   motivos: () => client.get('/movimientos/motivos').then((r) => r.data),
   tiposMovimiento: () => client.get('/movimientos/tipos-movimiento').then((r) => r.data),

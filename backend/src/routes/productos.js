@@ -128,7 +128,12 @@ async function dbOk() {
 router.get('/', auth, async (req, res) => {
   if (await dbOk()) {
     try {
-      const [rows] = await pool.query('SELECT * FROM productos ORDER BY codigo');
+      const [rows] = await pool.query(`
+        SELECT p.*, ie.nombre AS ingrediente_nombre, ie.texto AS ingrediente_texto
+        FROM productos p
+        LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+        ORDER BY p.codigo
+      `);
       if (rows.length) return res.json(rows);
     } catch { /* tabla no existe */ }
   }
@@ -138,35 +143,52 @@ router.get('/', auth, async (req, res) => {
 router.get('/tipos-ganado', auth, (_req, res) => res.json(TIPOS));
 
 router.post('/', auth, requireAdmin, async (req, res) => {
-  const { codigo, nombre, tipo_ganado } = req.body;
+  const { codigo, nombre, tipo_ganado, ingrediente_id } = req.body;
   if (!codigo || !nombre) return res.status(400).json({ error: 'codigo y nombre son requeridos' });
 
   if (await dbOk()) {
     try {
       const [result] = await pool.query(
-        'INSERT INTO productos (codigo, nombre, tipo_ganado, activo) VALUES (?,?,?,1)',
-        [codigo, nombre, tipo_ganado || 'Ambos']
+        'INSERT INTO productos (codigo, nombre, tipo_ganado, ingrediente_id, activo) VALUES (?,?,?,?,1)',
+        [codigo, nombre, tipo_ganado || 'Ambos', ingrediente_id ? Number(ingrediente_id) : null]
       );
-      const [rows] = await pool.query('SELECT * FROM productos WHERE id=?', [result.insertId]);
+      const [rows] = await pool.query(`
+        SELECT p.*, ie.nombre AS ingrediente_nombre, ie.texto AS ingrediente_texto
+        FROM productos p
+        LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+        WHERE p.id=?
+      `, [result.insertId]);
       return res.json(rows[0]);
     } catch { /* fallback */ }
   }
 
-  const prod = { id: seq++, codigo, nombre, tipo_ganado: tipo_ganado || 'Ambos', activo: true };
+  const prod = { id: seq++, codigo, nombre, tipo_ganado: tipo_ganado || 'Ambos', ingrediente_id: ingrediente_id || null, activo: true };
   memProductos.push(prod);
   res.json(prod);
 });
 
 router.put('/:id', auth, requireAdmin, async (req, res) => {
-  const { codigo, nombre, tipo_ganado, activo } = req.body;
+  const { codigo, nombre, tipo_ganado, ingrediente_id, activo } = req.body;
 
   if (await dbOk()) {
     try {
       await pool.query(
-        'UPDATE productos SET codigo=?, nombre=?, tipo_ganado=?, activo=? WHERE id=?',
-        [codigo, nombre, tipo_ganado, activo !== undefined ? (activo ? 1 : 0) : 1, req.params.id]
+        'UPDATE productos SET codigo=?, nombre=?, tipo_ganado=?, ingrediente_id=?, activo=? WHERE id=?',
+        [
+          codigo,
+          nombre,
+          tipo_ganado,
+          ingrediente_id !== undefined ? (ingrediente_id ? Number(ingrediente_id) : null) : null,
+          activo !== undefined ? (activo ? 1 : 0) : 1,
+          req.params.id
+        ]
       );
-      const [rows] = await pool.query('SELECT * FROM productos WHERE id=?', [req.params.id]);
+      const [rows] = await pool.query(`
+        SELECT p.*, ie.nombre AS ingrediente_nombre, ie.texto AS ingrediente_texto
+        FROM productos p
+        LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+        WHERE p.id=?
+      `, [req.params.id]);
       if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
       return res.json(rows[0]);
     } catch { /* fallback */ }
@@ -174,7 +196,7 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
 
   const idx = memProductos.findIndex(p => p.id === Number(req.params.id));
   if (idx === -1) return res.status(404).json({ error: 'No encontrado' });
-  memProductos[idx] = { ...memProductos[idx], codigo, nombre, tipo_ganado, activo };
+  memProductos[idx] = { ...memProductos[idx], codigo, nombre, tipo_ganado, ingrediente_id, activo };
   res.json(memProductos[idx]);
 });
 

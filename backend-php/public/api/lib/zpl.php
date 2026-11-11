@@ -3,13 +3,14 @@
 // Genera ZPL para impresora Zebra. Tamaño etiqueta carne: 4" x 2" (812 x 406 dots a 203dpi)
 
 function renderZplEtiqueta(array $data): string {
-    $lote      = $data['lote'] ?? null;
-    $codigo    = $data['codigo'] ?? null;
-    $caja      = $data['caja'] ?? null;
-    $kilos     = $data['kilos'] ?? null;
-    $producto  = $data['producto'] ?? null;
-    $fecha     = $data['fecha'] ?? null;
-    $romaneaje = $data['romaneaje'] ?? null;
+    $lote         = $data['lote'] ?? null;
+    $codigo       = $data['codigo'] ?? null;
+    $caja         = $data['caja'] ?? null;
+    $kilos        = $data['kilos'] ?? null;
+    $producto     = $data['producto'] ?? null;
+    $fecha        = $data['fecha'] ?? null;
+    $romaneaje    = $data['romaneaje'] ?? null;
+    $ingredientes = $data['ingredientes'] ?? null;
 
     $barcode = buildBarcode(['codigo' => $codigo, 'lote' => $lote, 'caja' => $caja, 'kilos' => $kilos]);
 
@@ -30,6 +31,7 @@ function renderZplEtiqueta(array $data): string {
         "^FO30,180^BCN,100,N,N,N^FD{$barcode}^FS",
         "^FO30,290^A0N,20,20^FD{$barcode}^FS",
         "^FO580,290^A0N,20,20^FDCaja: {$caja}^FS",
+        $ingredientes ? "^FO30,322^FB752,3,2,L,0^A0N,16,16^FDIngredientes: {$ingredientes}^FS" : '',
         '^XZ',
     ];
 

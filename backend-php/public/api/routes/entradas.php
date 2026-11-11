@@ -200,7 +200,27 @@ $router->post('/caja', function () {
         $etiqueta = $pdo->prepare('SELECT * FROM etiquetas WHERE id=?');
         $etiqueta->execute([$etiquetaId]);
 
-        $zpl = renderZplEtiqueta(['lote' => $lote_num, 'codigo' => $codigo, 'caja' => $caja, 'kilos' => $kilos, 'producto' => $producto, 'fecha' => $fecha, 'romaneaje' => $romaneaje]);
+        $stProd = $pdo->prepare('
+            SELECT ie.texto AS ingredientes
+            FROM productos p
+            LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+            WHERE p.codigo = ?
+            LIMIT 1
+        ');
+        $stProd->execute([$codigo]);
+        $prodRow = $stProd->fetch();
+        $ingredientes = $prodRow ? ($prodRow['ingredientes'] ?? null) : null;
+
+        $zpl = renderZplEtiqueta([
+            'lote'         => $lote_num,
+            'codigo'       => $codigo,
+            'caja'         => $caja,
+            'kilos'        => $kilos,
+            'producto'     => $producto,
+            'fecha'        => $fecha,
+            'romaneaje'    => $romaneaje,
+            'ingredientes' => $ingredientes,
+        ]);
 
         jsonResponse(['entrada' => $entrada->fetch(), 'etiqueta' => $etiqueta->fetch(), 'zpl' => $zpl]);
     } catch (Throwable $e) {

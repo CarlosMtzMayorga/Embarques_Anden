@@ -2,7 +2,7 @@ const { buildBarcode } = require('./barcode');
 
 // Genera ZPL para impresora Zebra
 // Tamaño típico etiqueta carne: 4" x 2" (812 x 406 dots a 203dpi)
-function renderZplEtiqueta({ lote, codigo, caja, kilos, producto, fecha, romaneaje }) {
+function renderZplEtiqueta({ lote, codigo, caja, kilos, producto, fecha, romaneaje, ingredientes }) {
   const barcode = buildBarcode({ codigo, lote, caja, kilos });
   return [
     '^XA',
@@ -32,6 +32,8 @@ function renderZplEtiqueta({ lote, codigo, caja, kilos, producto, fecha, romanea
     `^FO30,290^A0N,20,20^FD${barcode}^FS`,
     // Número de caja
     `^FO580,290^A0N,20,20^FDCaja: ${caja}^FS`,
+    // Ingredientes (si están configurados)
+    ingredientes ? `^FO30,322^FB752,3,2,L,0^A0N,16,16^FDIngredientes: ${ingredientes}^FS` : '',
     '^XZ',
   ].filter(Boolean).join('\n');
 }

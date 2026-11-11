@@ -37,6 +37,7 @@ const NAV_ADMIN_GROUPS = [
     items: [
       { to: '/clientes', label: 'Clientes' },
       { to: '/productos', label: 'Productos' },
+      { to: '/ingredientes', label: 'Ingredientes' },
     ],
   },
   {

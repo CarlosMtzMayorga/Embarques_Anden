@@ -268,7 +268,15 @@ router.post('/caja', auth, async (req, res) => {
 
       const [[entrada]]  = await conn.query('SELECT * FROM entradas WHERE id=?', [enRes.insertId]);
       const [[etiqueta]] = await conn.query('SELECT * FROM etiquetas WHERE id=?', [etRes.insertId]);
-      const zpl = renderZplEtiqueta({ lote: lote_num, codigo, caja, kilos, producto, fecha, romaneaje });
+      const [[prodRow]]  = await conn.query(`
+        SELECT ie.texto AS ingredientes
+        FROM productos p
+        LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+        WHERE p.codigo = ?
+        LIMIT 1
+      `, [codigo]);
+      const ingredientes = prodRow?.ingredientes || null;
+      const zpl = renderZplEtiqueta({ lote: lote_num, codigo, caja, kilos, producto, fecha, romaneaje, ingredientes });
       return res.json({ entrada, etiqueta, zpl });
     } catch (err) {
       await conn.rollback();

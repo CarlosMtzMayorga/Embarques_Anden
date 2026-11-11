@@ -19,6 +19,7 @@ app.use('/api/entradas',    require('./routes/entradas'));
 app.use('/api/etiquetas',   require('./routes/etiquetas'));
 app.use('/api/clientes',    require('./routes/clientes'));
 app.use('/api/productos',   require('./routes/productos'));
+app.use('/api/ingredientes', require('./routes/ingredientes'));
 app.use('/api/salidas',     require('./routes/salidas'));
 app.use('/api/existencias', require('./routes/existencias'));
 app.use('/api/movimientos', require('./routes/movimientos'));

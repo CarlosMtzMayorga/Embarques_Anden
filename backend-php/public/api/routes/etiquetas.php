@@ -10,8 +10,16 @@ $router->post('/zpl', function () {
     if (!$lote || !$codigo || !$kilos) jsonError(400, 'Faltan datos para generar la etiqueta');
 
     $caja = $body['caja'] ?? 1;
-    $data = ['lote' => $lote, 'codigo' => $codigo, 'caja' => $caja, 'kilos' => $kilos,
-              'producto' => $body['producto'] ?? null, 'fecha' => $body['fecha'] ?? null, 'romaneaje' => $body['romaneaje'] ?? null];
+    $data = [
+        'lote'         => $lote,
+        'codigo'       => $codigo,
+        'caja'         => $caja,
+        'kilos'        => $kilos,
+        'producto'     => $body['producto'] ?? null,
+        'fecha'        => $body['fecha'] ?? null,
+        'romaneaje'    => $body['romaneaje'] ?? null,
+        'ingredientes' => $body['ingredientes'] ?? null,
+    ];
     try {
         $zpl = renderZplEtiqueta($data);
         $barcode = buildBarcode($data);
@@ -95,7 +103,13 @@ $router->delete('/:id', function ($params) {
 $router->put('/:id/reimprimir', function ($params) {
     requireAuth();
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT * FROM etiquetas WHERE id = ?');
+    $stmt = $pdo->prepare('
+        SELECT e.*, ie.texto AS ingredientes
+        FROM etiquetas e
+        LEFT JOIN productos p ON e.codigo = p.codigo
+        LEFT JOIN ingredientes_etiqueta ie ON p.ingrediente_id = ie.id
+        WHERE e.id = ?
+    ');
     $stmt->execute([$params['id']]);
     $etiqueta = $stmt->fetch();
     if (!$etiqueta) jsonError(404, 'No encontrada');
@@ -104,8 +118,14 @@ $router->put('/:id/reimprimir', function ($params) {
     $pdo->prepare('UPDATE etiquetas SET veces_impresa = veces_impresa + 1 WHERE id=?')->execute([$params['id']]);
 
     $zpl = renderZplEtiqueta([
-        'lote' => $etiqueta['lote_num'], 'codigo' => $etiqueta['codigo'], 'caja' => $etiqueta['caja'],
-        'kilos' => $etiqueta['kilos'], 'producto' => $etiqueta['producto'], 'fecha' => $etiqueta['fecha'], 'romaneaje' => $etiqueta['romaneaje'],
+        'lote'         => $etiqueta['lote_num'],
+        'codigo'       => $etiqueta['codigo'],
+        'caja'         => $etiqueta['caja'],
+        'kilos'        => $etiqueta['kilos'],
+        'producto'     => $etiqueta['producto'],
+        'fecha'        => $etiqueta['fecha'],
+        'romaneaje'    => $etiqueta['romaneaje'],
+        'ingredientes' => $etiqueta['ingredientes'] ?? null,
     ]);
     $etiqueta['veces_impresa'] = (int) $etiqueta['veces_impresa'] + 1;
     jsonResponse(['etiqueta' => $etiqueta, 'zpl' => $zpl]);
